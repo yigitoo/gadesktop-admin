@@ -3,17 +3,35 @@
 	import { is_logged, page_index, user_data } from './stores.mjs';
 	import Navbar from './components/Navbar.svelte';
 	import './static/loginstyle.css';
-    import { each, prevent_default } from 'svelte/internal';
-
+    
+	// REMOTE_SERVER is defined in rollup.config.js
 	const url = "REMOTE_SERVER";
 
 	let username = "GUEST";
 	let email;
 	let secretKey;
 	let per_case_complaints = [];
-
-	let _complaints
-	$: complaints_reactive = _complaints; 
+	let complaints = [{
+		_id: "7b29bd67-482e-4127-b6f9-a907cdf2caea",
+		title:"Komşumda şüheli bir gal arısı durumu var",
+		content: "Eklerde mevcuttur",
+		comp_user: "59e5321b-b43c-48b2-883a-42ff46dfe49e",
+		complainant: "3446d7fd-b74b-4b2d-909b-1dd0e7b4c8d4"
+	}, {
+		_id: "8ffe7d06-06ff-4d97-b59f-f03224bac654",
+		title:"şüheli bir gal arısı durumu var ve bildirilmiyor!",
+		content: "Bir göz atılması şart",
+		comp_user: "5321532sdf-c8b2-883a-42ff46dfe49e",
+		complainant: "344dxt345-4b2d-909b-1dd0e7b4c8d4"
+	}, {
+		_id: "c82a2c8c-7497-4ce6-8893-2cffdf581db8",
+		title:"şüheli bir gal arısı durumu var ve bildirilmiyor!",
+		content: "Ne yapılmıası gerekiyorsa acil yapılımalı. Lütfen birimleri yollayın.",
+		comp_user: "673s5321b-b43c-48b2-883a-42ff46dfe49e",
+		complainant: "3446d7fd-b74b-4b2d-909b-1dd0e7b4c8d4"
+	}, {
+		_id: "f75ba1cc-ee20-44a7-ae24-f457bb946d15"
+	}];
 
 	// for frotend
 	let zero_to_n = [];
@@ -122,46 +140,33 @@
 
 		if (result.response === 200)
 		{
-			return result.data
+			complaints = result.data
 		} else {
-			return "ERROR_CANNOT_GET_COMPLAINTS";
+			complaints = "ERROR_CANNOT_GET_COMPLAINTS";
+			console.error(complaints)
 		}
 	}
 
 	const send_form = async () => {
 		await submit_form(email, secretKey);
-		let complaints = [];
 
 		await get_complaints(email, secretKey)
-			.then(result => complaints = result)
-			.catch(err => console.error(err));
-		_complaints = complaints;
 		
-		for(let i of complaints)
-		{
-			for (var j = 0, keys = Object.keys(i); j < keys.length; j++) 
-			{
-				
-				temp[`${keys[j]}`] = complaints[keys[j]];;
-			}
-			per_case_complaints.push(temp)
-			temp = {};
-		}
-		console.log(per_case_complaints)
+		setTimeout(() => console.log(complaints), 4500);
 	}
 
 	// reactives
-	let logged_reactive_component = isLogged();
+	let logged_reactive_component = true ?? isLogged();
 	$: logged = logged_reactive_component ?? false;
 
-	let ui_reactive_component = load_page_index();
+	let ui_reactive_component = 1 ?? load_page_index();
 	$: ui = ui_reactive_component ?? 0;
 
 	let title_list = ["Giriş Sayfası", "Ana Sayfa / Şikaye Değerlendirme"];
 	$: title_reactive = title_list[ui]
 </script>
 <svelte:head>
-	<title>GaServer Desktop Client | {title_reactive ?? "Ana Sayfa"}</title>
+	<title>Gal-BUL Masaüstü İstemcisi (Admin Panel) | {title_reactive ?? "Ana Sayfa"}</title>
 </svelte:head>
 <div class="container" style={`${!logged ? "overflow:hidden;" : "overflow:hidden;"}`}>
 	<div class="navbar" style="position:absolute; top: -8.1%; left: 0%">
@@ -169,7 +174,7 @@
 	</div>
 	{#if ui === 0}
 		<main style="overflow: hidden;">
-			<div class="login-box">
+			<div class="login-box" style="position: absolute; top: 50%; left: 50%;">
 				<h2>Admin Panel Giriş Formu</h2>
 				<br/>
 				<form on:submit|preventDefault={send_form} method="POST" name="loginform" autocomplete="off">
@@ -195,20 +200,41 @@
 			<center>
 				<h1>
 					<br>
-					<u class="text-white" style="padding-top: 2.5rem;font-family:monospace; font-size: 2.5rem; color: white;">Şikayet Değerlendirme:</u>
+					<u class="nosecet text-white" style="padding-top: 2.5rem;font-family:monospace; font-size: 2.5rem; color: white;">Şikayet Değerlendirme:</u>
 				</h1>
-				<br/>
+				<div style="margin-bottom: 50%;"></div>
 				<div class="complaints">
-				{#each per_case_complaints as single_case}
-					<p class="complaint">
-						ID: {single_case.comp_id}
-						Şikayet edilen: <a href={`$http://localhost:8081/profile/${single_case.complaint_user_id}`}>{single_case.comp_user}</a>
-						Şikayet başlığı: {single_case.title}
-						Şikayet içeriği: {single_case.content}
-					
-						Şikayet Ek/Resimi: <img src={`http://localhost:8081/static/webimgs/${single_case.comp_id}.png`} alt="proof_of_consept"/>
-						Şikayet eden: <a href={`http://localhost:8081/profile/${single_case.complainant_user_id}`}>{single_case.complainant_username}</a>
-					</p>
+				{#each complaints as single_case}
+					<div class=" reset-thisnoselect text-white complaint login-box" style="text-align:start; position: relative; left: 20%;">
+						<div class="reset-this text-white" style="color:white; margin-bottom: 10px; text-overflow:ellipsis;">
+							ID: {single_case._id}
+						</div>
+						<br>
+						<div class=" reset-this text-white" style="overflow: hidden; color:white; text-overflow:ellipsis;"> 
+							Şikayet edilen: <a style="text-decoration: underline;" href={`http://localhost:8081/profile/${single_case.comp_user}`}>{single_case.comp_user}</a>
+						</div>
+						<br>
+						<div class="text-white" style="color:white; text-overflow:ellipsis;">
+							Şikayet başlığı: {single_case.title}
+						</div>
+						<br>
+						<div class="text-white" style="color:white; text-overflow:ellipsis;">
+							Şikayet içeriği: {single_case.content}
+						</div>
+						<br>
+						<div class="text-white" style="color:white; text-overflow:ellipsis;">
+							Şikayet Ek/Resimi:
+							<br>
+							<br>
+							<br>
+							<img style="width: 250px; height: 250px;"src={`http://localhost:8081/static/webimgs/${single_case._id}.png`} alt="proof_of_consept"/>
+							<br>
+							<br>
+							<br>
+							Şikayet eden: <a style="text-decoration: underline;" href={`http://localhost:8081/profile/${single_case.complainant}`}>{single_case.complainant}</a>
+						</div>
+					</div>
+					<div style="maring-bottom: 150px;"></div>
 				{/each}
 				</div>
 			</center>
